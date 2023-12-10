@@ -1880,6 +1880,7 @@ impl BackendStorage for CudaStorage {
         kernel_l: &Layout,
         params: &crate::conv::ParamsConv2D,
     ) -> Result<Self> {
+        println!("Starting cudnn conv");
         let device = self.device().clone();
         if !kernel_l.is_contiguous() {
             let slice = Conv2D(params).map(&self.slice, inp_l, &kernel.slice, kernel_l, &device)?;
