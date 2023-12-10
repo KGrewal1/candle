@@ -38,6 +38,7 @@ pub(crate) fn launch_conv2d<
     use cudarc::cudnn::sys::cudnnConvolutionFwdAlgo_t as A;
 
     let device_id = dev.id();
+    println!("acquired device id");
     let cudnn = CUDNN.with(|cudnn| {
         if let Some(cudnn) = cudnn.borrow().get(&device_id) {
             return Ok(cudnn.clone());
@@ -48,18 +49,21 @@ pub(crate) fn launch_conv2d<
         }
         c
     })?;
+    println!("acquired cudnn");
     let conv = cudnn.create_conv2d::<T>(
         /* pad */ [params.padding as i32, params.padding as i32],
         /* stride */ [params.stride as i32, params.stride as i32],
         /* dilation */ [params.dilation as i32, params.dilation as i32],
         cudarc::cudnn::sys::cudnnConvolutionMode_t::CUDNN_CROSS_CORRELATION,
     )?;
+    println!("created conv");
     let x_shape = [
         params.b_size as i32,
         params.c_in as i32,
         params.i_h as i32,
         params.i_w as i32,
     ];
+    println!("got x_shape");
     // Note that `src` already starts at the proper offset.
     let x = if src_l.is_contiguous() {
         cudnn.create_4d_tensor(
@@ -82,17 +86,20 @@ pub(crate) fn launch_conv2d<
             params.k_w as i32,
         ],
     )?;
+    println!("created w");
     let (w_out, h_out) = (params.out_w() as i32, params.out_h() as i32);
     let y = cudnn.create_4d_tensor(
         cudarc::cudnn::sys::cudnnTensorFormat_t::CUDNN_TENSOR_NCHW,
         [params.b_size as i32, params.c_out as i32, h_out, w_out],
     )?;
+
     let conv2d = Conv2dForward {
         conv: &conv,
         x: &x,
         w: &w,
         y: &y,
     };
+    println!("created conv2d");
     let alg = match params.cudnn_fwd_algo {
         None => conv2d.pick_algorithm()?,
         Some(CandleAlgo::ImplicitGemm) => A::CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM,
