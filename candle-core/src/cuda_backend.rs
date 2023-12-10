@@ -1901,6 +1901,7 @@ impl BackendStorage for CudaStorage {
                 let inp = &inp.slice(inp_l.start_offset()..);
                 let k = &k.slice(kernel_l.start_offset()..);
                 let mut out = unsafe { device.alloc::<bf16>(dst_el) }.w()?;
+                println!("Launching bf16 conv");
                 crate::cudnn::launch_conv2d::<bf16>(inp, inp_l, k, &mut out, params, &device)
                     .map_err(crate::Error::wrap)?;
                 S::BF16(out)
