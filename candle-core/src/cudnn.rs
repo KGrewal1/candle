@@ -45,6 +45,7 @@ pub(crate) fn launch_conv2d<
         }
         println!("creating new cudnn");
         let c = Cudnn::new(dev.cuda_device());
+        println!("c {:?}", c);
         if let Ok(c) = &c {
             println!("c waS OK");
             cudnn.borrow_mut().insert(device_id, c.clone());
